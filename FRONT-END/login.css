@@ -1,0 +1,129 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background:radial-gradient(rgb(62, 62, 172), darkblue);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.campo-email {
+    position: relative;
+}
+
+.mensagem-erro {
+    display: none;
+    background-color: #ffe5e5;
+    color: #c0392b;
+    border: 1px solid #c0392b;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 6px;
+    position: relative;
+}
+
+.mensagem-erro.mostrar {
+    display: block;
+    animation: aparecer 0.2s ease-in-out;
+}
+
+.mensagem-erro::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 20px;
+    border-width: 6px 6px 0 6px;
+    border-style: solid;
+    border-color: #c0392b transparent transparent transparent;
+}
+
+@keyframes aparecer {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.login{
+    width: 100%;
+    max-width: 400px;
+    background-color: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(99, 96, 96, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.login h2{
+    text-align: center;
+    color: #000000;
+    margin-bottom: 10px;
+}
+
+.login input{
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: 0.3s;
+}
+.esquecida {
+    font-size: 12px;
+    text-align: center;
+}
+
+.login input:focus{
+    border-color: #033279;
+}
+
+.login button{
+    width: 100%;
+    padding: 12px;
+    background-color: #1c54a8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-voltar{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 30px;
+    margin: 0 auto;
+
+}
+
+a{
+
+    text-decoration: none;
+}
+
+.login button:hover{
+    background-color: #0547a8;
+}
+.login p{
+    font-size: 12px;
+    color: black;
+    text-align: center;
+}
+.login a{
+    color: black;
+}
+.login a:hover{
+    text-decoration: underline;
+}

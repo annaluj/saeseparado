@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro</title>
+    <link rel="stylesheet" href="cadastro.css">
+</head>
+<body>
+
+    <form action="../BACK-END/cadastrar.php" method="post" enctype="multipart/form-data" class="cadastro">
+
+        <h2>Dados do usuário</h2>
+
+        <div class="foto-usuario">
+            <img width="200px" id="imagem-preview" src="#" alt="Prévia da foto" style="display: none;">
+        </div>
+
+        <input type="file" id="input-foto" name="foto" accept="image/*">
+
+        <input type="text" name="nome" placeholder="Nome" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="senha" placeholder="Senha" required>
+
+        <h2>Endereço</h2>
+
+        <input type="text" name="rua" placeholder="Rua" required>
+        <input type="text" name="cep" placeholder="CEP" required>
+        <input type="text" name="numero" placeholder="Número" required>
+        <input type="text" name="bairro" placeholder="Bairro" required>
+        <input type="text" name="cidade" placeholder="Cidade" required>
+
+        <br>
+
+        <button type="submit">Cadastrar</button>
+
+        <a href="index.html">
+            <button type="button" class="btn-voltar">Voltar</button>
+        </a>
+
+    </form>
+
+    <script src="pagina01.js"></script>
+
+</body>
+</html>

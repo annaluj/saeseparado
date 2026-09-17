@@ -1,0 +1,57 @@
+.consulta{
+    width: 100%;
+    max-width: 400px;
+    background-color: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(99, 96, 96, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: auto;
+    margin-top: 150px;
+}
+
+body{
+    background:radial-gradient(rgb(113, 6, 155),rgb(29, 92, 173),rgb(3, 3, 126))
+}
+
+h1{
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 20px;
+}
+
+.consulta input{
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: 0.3s;
+}
+
+button{
+     padding: 12px;
+    background-color: #1c54a8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-voltar {
+    display: inline-block;
+    margin-right: 10px;
+    padding: 10px 20px;
+    background-color: #777;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-voltar:hover {
+    background-color: #555;
+}

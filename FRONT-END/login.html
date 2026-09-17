@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="login.css">
+    <title>Login</title>
+
+</head>
+<body>
+    <form action="../BACK-END/login.php" method="post" class="login" novalidate>
+    <h2>Login</h2>
+
+    <div class="campo-email">
+        <p id="erro" class="mensagem-erro"></p>
+        <input type="email" name="email" placeholder="email">
+    </div>
+
+    <br>
+    <input type="password" name="senha" placeholder="Digite sua senha">
+    <br>
+    <button type="submit">Entrar</button>
+    <br>
+     <a href="index.html">
+        <button type="button" class="btn-voltar">Voltar</button>
+    </a>
+    <a href="senha-esquecida.html" class="esquecida">Esqueci minha senha</a>
+    <p>Não possui conta?<a href="cadastro.html">Cadastre-se</a></p>
+   
+</form>
+<script src="erro.js"></script>
+</body>
+</html>
