@@ -2,3 +2,6 @@
 /uploads/
 BACK-END/uploads/*
 !BACK-END/uploads/.htaccess
+
+# Credenciais do banco (cada pessoa tem o seu; use config.exemplo.php como modelo)
+BACK-END/config.php

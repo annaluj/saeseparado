@@ -41,6 +41,51 @@ function csrf_valido() {
         && hash_equals($_SESSION['csrf_token'], $enviado);
 }
 
+// ---------- Limite de tentativas de login ----------
+// Depois de 5 erros seguidos com o mesmo e-mail e IP, bloqueia por 15 minutos.
+// As tentativas ficam guardadas em arquivos na pasta temporária do sistema.
+
+const LOGIN_MAX_TENTATIVAS = 5;
+const LOGIN_BLOQUEIO_SEGUNDOS = 15 * 60;
+
+function arquivo_tentativas($email) {
+    $pasta = sys_get_temp_dir() . '/sae_login';
+    if (!is_dir($pasta)) {
+        mkdir($pasta, 0700, true);
+    }
+    $chave = hash('sha256', strtolower($email) . '|' . ($_SERVER['REMOTE_ADDR'] ?? ''));
+    return $pasta . '/' . $chave . '.json';
+}
+
+function ler_tentativas($email) {
+    $arquivo = arquivo_tentativas($email);
+    $dados = is_file($arquivo) ? json_decode(file_get_contents($arquivo), true) : null;
+
+    // Passou o tempo de bloqueio: zera a contagem
+    if (!$dados || time() - $dados['ultima'] > LOGIN_BLOQUEIO_SEGUNDOS) {
+        return ['quantidade' => 0, 'ultima' => 0];
+    }
+    return $dados;
+}
+
+function login_bloqueado($email) {
+    return ler_tentativas($email)['quantidade'] >= LOGIN_MAX_TENTATIVAS;
+}
+
+function registrar_falha_login($email) {
+    $dados = ler_tentativas($email);
+    $dados['quantidade']++;
+    $dados['ultima'] = time();
+    file_put_contents(arquivo_tentativas($email), json_encode($dados), LOCK_EX);
+}
+
+function limpar_tentativas_login($email) {
+    $arquivo = arquivo_tentativas($email);
+    if (is_file($arquivo)) {
+        unlink($arquivo);
+    }
+}
+
 // ---------- Upload de foto ----------
 
 // Confere se o arquivo é mesmo uma imagem e salva em BACK-END/uploads.

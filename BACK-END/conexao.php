@@ -1,13 +1,19 @@
 <?php
-    $servidor = "localhost";
-    $usuario = "root";
-    $senha = "";
-    $banco = "sae";
+    // Dados do banco ficam no config.php (fora do git). Se ele não existir, usa o modelo.
+    $config_banco = file_exists(__DIR__ . "/config.php")
+        ? require __DIR__ . "/config.php"
+        : require __DIR__ . "/config.exemplo.php";
 
     // Erros do banco são tratados pelo código (sem mostrar detalhes ao usuário)
     mysqli_report(MYSQLI_REPORT_OFF);
 
-    $conn = mysqli_connect($servidor, $usuario, $senha, $banco);
+    $conn = mysqli_connect(
+        $config_banco['servidor'],
+        $config_banco['usuario'],
+        $config_banco['senha'],
+        $config_banco['banco']
+    );
+    unset($config_banco);
 
     if (!$conn) {
         error_log("Erro na conexão com o banco: " . mysqli_connect_error());

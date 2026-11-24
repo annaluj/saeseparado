@@ -17,6 +17,14 @@
             exit();
         }
 
+        if (login_bloqueado($email)) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Muitas tentativas erradas. Aguarde 15 minutos e tente novamente."
+            ]);
+            exit();
+        }
+
         $resultado = executar($conn, "SELECT usuario_id, nome, senha_hash FROM usuarios WHERE email = ?", "s", [$email]);
 
         if (!$resultado) {
@@ -35,6 +43,7 @@
 
             // Gera um novo ID de sessão (evita sequestro de sessão)
             session_regenerate_id(true);
+            limpar_tentativas_login($email);
 
             $_SESSION['usuario_id'] = $usuario['usuario_id'];
             $_SESSION['usuario_nome'] = $usuario['nome'];
@@ -45,6 +54,8 @@
             ]);
             exit();
         }
+
+        registrar_falha_login($email);
 
         echo json_encode([
             "success" => false,
