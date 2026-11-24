@@ -1,6 +1,7 @@
 <?php
 require_once "seguranca.php";
-exigir_login();
+require_once "conexao.php";
+exigir_tipo($conn, 'estudante');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

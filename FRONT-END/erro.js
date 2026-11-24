@@ -23,7 +23,8 @@ if (login) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.href = "../BACK-END/pagina-principal.php";
+                // O servidor diz para qual área ir (estudante, profissional ou administrador)
+                window.location.href = data.redirect || "../BACK-END/pagina-principal.php";
             } else {
                 loginErro.textContent = data.message;
                 loginErro.classList.add("mostrar");
