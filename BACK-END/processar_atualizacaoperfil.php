@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once "seguranca.php";
 include("conexao.php");
 
 if (!isset($_SESSION['usuario_id'])) {
@@ -8,39 +8,61 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    if (!csrf_valido()) {
+        die("Requisição inválida. Recarregue a página e tente novamente.");
+    }
+
     $usuario_id = $_SESSION['usuario_id'];
 
     // 1. Busca os dados atuais do banco como backup
-    $sql_busca = "SELECT * FROM usuarios WHERE usuario_id = '$usuario_id'";
-    $res_busca = mysqli_query($conn, $sql_busca);
-    $atual = mysqli_fetch_assoc($res_busca);
+    $res_busca = executar($conn, "SELECT * FROM usuarios WHERE usuario_id = ?", "i", [$usuario_id]);
+    $atual = $res_busca ? mysqli_fetch_assoc($res_busca) : null;
+
+    if (!$atual) {
+        die("Erro ao carregar os dados do usuário.");
+    }
 
     // 2. Se o campo enviado estiver vazio, mantém o valor atual do banco de dados
-    $nome        = !empty($_POST['nome'])        ? mysqli_real_escape_string($conn, $_POST['nome'])        : $atual['nome'];
-    $email       = !empty($_POST['email'])       ? mysqli_real_escape_string($conn, $_POST['email'])       : $atual['email'];
-    $rua         = !empty($_POST['rua'])         ? mysqli_real_escape_string($conn, $_POST['rua'])         : $atual['rua'];
-    $cep         = !empty($_POST['cep'])         ? mysqli_real_escape_string($conn, $_POST['cep'])         : $atual['cep'];
-    $numero_casa = !empty($_POST['numero_casa']) ? mysqli_real_escape_string($conn, $_POST['numero_casa']) : $atual['numero_casa'];
-    $bairro      = !empty($_POST['bairro'])      ? mysqli_real_escape_string($conn, $_POST['bairro'])      : $atual['bairro'];
-    $cidade      = !empty($_POST['cidade'])      ? mysqli_real_escape_string($conn, $_POST['cidade'])      : $atual['cidade'];
+    $campos = ['nome', 'email', 'rua', 'cep', 'numero_casa', 'bairro', 'cidade'];
+    $novo = [];
+    foreach ($campos as $campo) {
+        $valor = trim($_POST[$campo] ?? '');
+        $novo[$campo] = $valor !== '' ? $valor : $atual[$campo];
+    }
+
+    if (!filter_var($novo['email'], FILTER_VALIDATE_EMAIL)) {
+        die("Digite um e-mail válido.");
+    }
+
+    // Não deixa usar um e-mail que já pertence a outra conta
+    $res_email = executar($conn, "SELECT usuario_id FROM usuarios WHERE email = ? AND usuario_id <> ?", "si", [$novo['email'], $usuario_id]);
+    if ($res_email && mysqli_num_rows($res_email) > 0) {
+        die("Este e-mail já está sendo usado por outra conta.");
+    }
 
     // 3. Executa a atualização
-    $sql_update = "UPDATE usuarios SET 
-                    nome = '$nome', 
-                    email = '$email', 
-                    rua = '$rua', 
-                    cep = '$cep', 
-                    numero_casa = '$numero_casa', 
-                    bairro = '$bairro', 
-                    cidade = '$cidade' 
-                   WHERE usuario_id = '$usuario_id'";
+    $sql_update = "UPDATE usuarios SET
+                    nome = ?,
+                    email = ?,
+                    rua = ?,
+                    cep = ?,
+                    numero_casa = ?,
+                    bairro = ?,
+                    cidade = ?
+                   WHERE usuario_id = ?";
 
-    if (mysqli_query($conn, $sql_update)) {
-        $_SESSION['usuario_nome'] = $nome; // Atualiza o nome na sessão
+    $atualizado = executar($conn, $sql_update, "sssssssi", [
+        $novo['nome'], $novo['email'], $novo['rua'], $novo['cep'],
+        $novo['numero_casa'], $novo['bairro'], $novo['cidade'], $usuario_id
+    ]);
+
+    if ($atualizado) {
+        $_SESSION['usuario_nome'] = $novo['nome']; // Atualiza o nome na sessão
         header("Location: perfil.php");
         exit();
     } else {
-        echo "Erro ao atualizar banco de dados: " . mysqli_error($conn);
+        echo "Erro ao atualizar os dados. Tente novamente mais tarde.";
     }
 } else {
     header("Location: perfil.php");

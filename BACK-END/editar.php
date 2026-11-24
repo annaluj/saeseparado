@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once "seguranca.php";
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: ../FRONT-END/login.html");
@@ -11,8 +11,7 @@ include("conexao.php");
 $usuario_id = $_SESSION['usuario_id'];
 
 // Busca os dados cadastrados atualmente
-$sql = "SELECT nome, email, rua, cep, numero_casa, bairro, cidade FROM usuarios WHERE usuario_id = '$usuario_id'";
-$resultado = mysqli_query($conn, $sql);
+$resultado = executar($conn, "SELECT nome, email, rua, cep, numero_casa, bairro, cidade FROM usuarios WHERE usuario_id = ?", "i", [$usuario_id]);
 
 if ($resultado && mysqli_num_rows($resultado) > 0) {
     $usuario = mysqli_fetch_assoc($resultado);
@@ -32,6 +31,7 @@ if ($resultado && mysqli_num_rows($resultado) > 0) {
     
     <!-- Envia para o processar_atualizacao.php -->
     <form action="processar_atualizacaoperfil.php" method="post" enctype="multipart/form-data" class="cadastro">
+        <?php echo csrf_campo(); ?>
         <h2>Dados do usuário</h2>
         
         <div class="foto-usuario">

@@ -1,9 +1,5 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-session_start();
+require_once "seguranca.php";
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: ../FRONT-END/login.html");
@@ -15,6 +11,7 @@ if (!isset($_SESSION['usuario_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
     <title>Agendar Consulta - SAE</title>
     <link rel="stylesheet" href="../FRONT-END/agendar.css">
 </head>

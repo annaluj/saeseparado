@@ -1,0 +1,4 @@
+# Fotos enviadas pelos usuários (dados pessoais, não vão para o GitHub)
+/uploads/
+BACK-END/uploads/*
+!BACK-END/uploads/.htaccess

@@ -1,10 +1,9 @@
 const formConsulta = document.getElementById("formConsulta");
-const campoData = document.getElementById("data");
-if (campoData) {
-    const hoje = new Date().toISOString().split("T")[0];
-    campoData.setAttribute("min", hoje);
-}
+// A data mínima do calendário já vem definida pelo PHP (agendar.php), no horário do Brasil.
 
+// Token de segurança (CSRF) que o PHP coloca no <head> da página
+const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+const csrfToken = csrfMeta ? csrfMeta.content : "";
 
 if (formConsulta) {
     formConsulta.addEventListener("submit", function(event){
@@ -15,7 +14,6 @@ if (formConsulta) {
         btnSubmit.textContent = "Agendando...";
 
         const dados = {
-            nome: document.getElementById("nome").value,
             data: document.getElementById("data").value,
             hora: document.getElementById("hora").value
         };
@@ -23,7 +21,8 @@ if (formConsulta) {
         fetch("../BACK-END/processar_agendamento.php", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "X-CSRF-Token": csrfToken
             },
             body: JSON.stringify(dados)
         })

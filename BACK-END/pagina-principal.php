@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once "seguranca.php";
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: ../FRONT-END/login.html");
@@ -11,25 +11,25 @@ include("conexao.php");
 $usuario_id = $_SESSION['usuario_id'];
 
 // 1. Busca os agendamentos do usuário logado
-$sql_agendamentos = "SELECT * FROM agendamentos 
-                     WHERE usuario_id = '$usuario_id' 
-                     ORDER BY data_consulta ASC, horario_consulta ASC";
-
-$resultado_agendamentos = mysqli_query($conn, $sql_agendamentos);
+$resultado_agendamentos = executar($conn,
+    "SELECT * FROM agendamentos
+      WHERE usuario_id = ?
+      ORDER BY data_consulta ASC, horario_consulta ASC",
+    "i", [$usuario_id]);
 
 if (!$resultado_agendamentos) {
-    die("Erro ao buscar agendamentos: " . mysqli_error($conn));
+    die("Erro ao buscar agendamentos. Tente novamente mais tarde.");
 }
 
 // 2. Busca e calcula a média das emoções do usuário
-$sql_emocoes = "SELECT AVG(emocao) AS media, COUNT(*) AS quantidade 
-                FROM registro_emocoes 
-                WHERE usuario_id = '$usuario_id'";
-
-$resultado_emocoes = mysqli_query($conn, $sql_emocoes);
+$resultado_emocoes = executar($conn,
+    "SELECT AVG(emocao) AS media, COUNT(*) AS quantidade
+       FROM registro_emocoes
+      WHERE usuario_id = ?",
+    "i", [$usuario_id]);
 
 if (!$resultado_emocoes) {
-    die("Erro ao buscar registros emocionais: " . mysqli_error($conn));
+    die("Erro ao buscar registros emocionais. Tente novamente mais tarde.");
 }
 
 $dados_emocoes = mysqli_fetch_assoc($resultado_emocoes);
@@ -55,11 +55,10 @@ if ($quantidade > 0) {
 }
 
 // 3. Busca a foto de perfil do usuário
-$sql_foto = "SELECT foto FROM usuarios WHERE usuario_id = '$usuario_id'";
-$resultado_foto = mysqli_query($conn, $sql_foto);
+$resultado_foto = executar($conn, "SELECT foto FROM usuarios WHERE usuario_id = ?", "i", [$usuario_id]);
 
 if (!$resultado_foto) {
-    die("Erro ao buscar a foto: " . mysqli_error($conn));
+    die("Erro ao buscar a foto. Tente novamente mais tarde.");
 }
 
 $dados_usuario = mysqli_fetch_assoc($resultado_foto);
@@ -70,6 +69,7 @@ $dados_usuario = mysqli_fetch_assoc($resultado_foto);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
     <title>Página Principal</title>
     <link rel="stylesheet" href="../FRONT-END/pagina-principal.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,6 +91,7 @@ $dados_usuario = mysqli_fetch_assoc($resultado_foto);
        
         <div class="foto-perfil">
             <form action="alterar_foto.php" method="POST" enctype="multipart/form-data">
+                <?php echo csrf_campo(); ?>
                 <label for="nova-foto" class="foto-clicavel" title="Clique para alterar sua foto">
                     <?php if (!empty($dados_usuario['foto'])): ?>
                         <img src="<?php echo htmlspecialchars($dados_usuario['foto']); ?>" alt="Foto do usuário">
@@ -105,6 +106,7 @@ $dados_usuario = mysqli_fetch_assoc($resultado_foto);
             <a href="logout.php">
                 <button type="button" class="sair">Sair da conta</button>
             </a>
+        </div>
     </header>
 
     <main class="cards">
@@ -140,8 +142,9 @@ $dados_usuario = mysqli_fetch_assoc($resultado_foto);
           onsubmit="return confirm('Tem certeza que deseja excluir este agendamento?');"
           style="margin-top: 8px;">
 
+        <?php echo csrf_campo(); ?>
         <input type="hidden" name="agendamento_id"
-               value="<?php echo $agendamento['id']; ?>">
+               value="<?php echo (int)$agendamento['id']; ?>">
 
         <button type="submit"
                 style="background-color: #dc3545; color: white; border: none;

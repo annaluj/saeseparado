@@ -135,7 +135,7 @@ nav a:hover{
     margin-bottom: 30px;
 }
 
-fechar img{
+.fechar img{
     width: 25px;
     height: 25px;
     display: block;
@@ -158,7 +158,7 @@ fechar img{
     position: absolute;
     inset: 0;
     z-index: -1;
-    background-image: url('imagem-principal.jpeg');
+    background-image: url('imagens/imagem-principal.jpeg');
     background-size: cover;      
     background-position: center 40%; 
     background-repeat: no-repeat;

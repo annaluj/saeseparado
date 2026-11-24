@@ -6,6 +6,10 @@ const mensagem = document.getElementById("mensagem");
 const inputFoto = document.getElementById('input-foto');
 const imgPreview = document.getElementById('imagem-preview');
 
+// Token de segurança (CSRF) que o PHP coloca no <head> da página principal
+const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+const csrfToken = csrfMeta ? csrfMeta.content : "";
+
 if (inputFoto && imgPreview) {
     inputFoto.addEventListener('change', function(event) {
         const arquivo = event.target.files[0];
@@ -13,9 +17,12 @@ if (inputFoto && imgPreview) {
             const leitor = new FileReader();
             leitor.onload = function(e) {
                 imgPreview.src = e.target.result;
-                imgPreview.style.display = 'block';
+                imgPreview.style.display = 'block'; // Mostra a imagem assim que carregar
             }
             leitor.readAsDataURL(arquivo);
+        } else {
+            imgPreview.src = '#';
+            imgPreview.style.display = 'none'; // Esconde se nenhum arquivo for selecionado
         }
     });
 }
@@ -52,7 +59,8 @@ if (emojis.length > 0 && mensagem) {
             fetch('../BACK-END/registrar_emocao.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json; charset=UTF-8'
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'X-CSRF-Token': csrfToken
                 },
                 body: JSON.stringify({ emocao: valorEmocao })
             })
@@ -64,7 +72,6 @@ if (emojis.length > 0 && mensagem) {
                 } else {
                     mensagem.textContent = "❌ " + data.message;
                     mensagem.style.color = "red";
-                    console.log("Debug do servidor:", data.debug);
                 }
             })
             .catch(error => {
@@ -81,22 +88,3 @@ if (emojis.length > 0 && mensagem) {
         });
     });
 }
-
-document.getElementById('input-foto').addEventListener('change', function(event) {
-    const arquivo = event.target.files[0];
-    const preview = document.getElementById('imagem-preview');
-
-    if (arquivo) {
-        const leitor = new FileReader();
-
-        leitor.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block'; // Mostra a imagem assim que carregar
-        };
-
-        leitor.readAsDataURL(arquivo);
-    } else {
-        preview.src = '#';
-        preview.style.display = 'none'; // Esconde se nenhum arquivo for selecionado
-    }
-});

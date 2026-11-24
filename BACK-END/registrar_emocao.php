@@ -1,11 +1,16 @@
 <?php
-session_start();
+require_once "seguranca.php";
 header('Content-Type: application/json; charset=utf-8');
 
 include("conexao.php");
 
 if (!isset($_SESSION['usuario_id'])) {
     echo json_encode(['success' => false, 'message' => 'Sessão expirada. Faça login novamente.']);
+    exit();
+}
+
+if (!csrf_valido()) {
+    echo json_encode(['success' => false, 'message' => 'Requisição inválida. Recarregue a página e tente novamente.']);
     exit();
 }
 
@@ -25,28 +30,32 @@ if ($emocao !== null && $emocao !== '') {
 
     if ($emocao_valor >= 1 && $emocao_valor <= 5) {
 
-        $sql_limite = "SELECT COUNT(*) AS total_hoje 
-                       FROM registro_emocoes 
-                       WHERE usuario_id = '$usuario_id' 
-                         AND DATE(data_registro) = CURDATE()";
-        
-        $res_limite = mysqli_query($conn, $sql_limite);
+        $res_limite = executar($conn,
+            "SELECT COUNT(*) AS total_hoje
+               FROM registro_emocoes
+              WHERE usuario_id = ?
+                AND DATE(data_registro) = CURDATE()",
+            "i", [$usuario_id]);
+
+        if (!$res_limite) {
+            echo json_encode(['success' => false, 'message' => 'Erro no servidor. Tente novamente mais tarde.']);
+            exit();
+        }
+
         $dados_limite = mysqli_fetch_assoc($res_limite);
         $total_hoje = (int)$dados_limite['total_hoje'];
 
         if ($total_hoje >= 5) {
             echo json_encode([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Você já atingiu o limite máximo de 5 registros de hoje! Volte amanhã.'
             ]);
             exit();
         }
 
-        $sql = "INSERT INTO registro_emocoes (usuario_id, emocao) VALUES ('$usuario_id', '$emocao_valor')";
-
-        if (mysqli_query($conn, $sql)) {
+        if (executar($conn, "INSERT INTO registro_emocoes (usuario_id, emocao) VALUES (?, ?)", "ii", [$usuario_id, $emocao_valor])) {
             $restantes = 5 - ($total_hoje + 1);
-            
+
             if ($restantes > 0) {
                 $mensagem_sucesso = "Emoção registrada com sucesso! Você ainda pode registrar mais $restantes vez(es) hoje.";
             } else {
@@ -54,11 +63,11 @@ if ($emocao !== null && $emocao !== '') {
             }
 
             echo json_encode([
-                'success' => true, 
+                'success' => true,
                 'message' => $mensagem_sucesso
             ]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Erro ao salvar no banco: ' . mysqli_error($conn)]);
+            echo json_encode(['success' => false, 'message' => 'Erro ao salvar. Tente novamente mais tarde.']);
         }
 
     } else {
@@ -66,9 +75,8 @@ if ($emocao !== null && $emocao !== '') {
     }
 } else {
     echo json_encode([
-        'success' => false, 
-        'message' => 'Nenhum dado enviado.',
-        'debug' => $raw_input
+        'success' => false,
+        'message' => 'Nenhum dado enviado.'
     ]);
 }
 ?>

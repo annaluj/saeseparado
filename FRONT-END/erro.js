@@ -11,6 +11,7 @@ if (login) {
         const valorSenha = inputSenha.value;
 
         loginErro.classList.remove("mostrar");
+        inputEmail.classList.remove("input-erro");
 
         fetch("../BACK-END/login.php", {
             method: 'POST',

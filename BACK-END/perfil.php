@@ -1,5 +1,5 @@
 <?php
-session_start(); // Ativa o uso de sessões nesta página
+require_once "seguranca.php"; // Ativa a sessão com as configurações de segurança
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: ../FRONT-END/login.html");
@@ -10,8 +10,7 @@ include("conexao.php");
 
 $id_usuario = $_SESSION['usuario_id']; 
 
-$query = "SELECT * FROM usuarios WHERE usuario_id = '$id_usuario'";
-$resultado = mysqli_query($conn, $query);
+$resultado = executar($conn, "SELECT * FROM usuarios WHERE usuario_id = ?", "i", [$id_usuario]);
 
 if ($resultado && mysqli_num_rows($resultado) > 0) {
     $dados = mysqli_fetch_assoc($resultado);
@@ -49,18 +48,18 @@ if ($resultado && mysqli_num_rows($resultado) > 0) {
         
         <section class="usuario">
                 <span class="rotulo">Nome:</span>
-                <p class="valor" id="nome"><?php echo $nome; ?></p>
+                <p class="valor" id="nome"><?php echo htmlspecialchars($nome); ?></p>
                 <span class="rotulo">E-mail:</span>
-                <p class="valor"><?php echo $email; ?></p>
+                <p class="valor"><?php echo htmlspecialchars($email); ?></p>
         </section>
 
         <section class="endereco">
             <h2>Endereço</h2>
-            <p><strong>Rua:</strong> <?php echo $rua; ?></p>
-            <p><strong>Número:</strong> <?php echo $numero; ?></p>
-            <p><strong>Bairro:</strong> <?php echo $bairro; ?></p>
-            <p><strong>Cidade:</strong> <?php echo $cidade; ?></p>
-            <p><strong>CEP:</strong> <?php echo $cep; ?></p>
+            <p><strong>Rua:</strong> <?php echo htmlspecialchars($rua); ?></p>
+            <p><strong>Número:</strong> <?php echo htmlspecialchars($numero); ?></p>
+            <p><strong>Bairro:</strong> <?php echo htmlspecialchars($bairro); ?></p>
+            <p><strong>Cidade:</strong> <?php echo htmlspecialchars($cidade); ?></p>
+            <p><strong>CEP:</strong> <?php echo htmlspecialchars($cep); ?></p>
         </section>
 
         <div class="acoes">
@@ -68,7 +67,11 @@ if ($resultado && mysqli_num_rows($resultado) > 0) {
         <a href="editar.php" class="btn-editar">Editar Informações</a>
         </div>
 
-       <div class="excluir-conta"> <a href="excluir_conta.php" onclick="return confirm('Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.');"> Excluir Conta </a> </div>
+       <!-- A exclusão é enviada por POST com token (um link simples poderia ser usado por outro site para apagar a conta) -->
+       <form id="form-excluir-conta" action="excluir_conta.php" method="POST" style="display: none;">
+            <?php echo csrf_campo(); ?>
+       </form>
+       <div class="excluir-conta"> <a href="excluir_conta.php" onclick="if (confirm('Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.')) { document.getElementById('form-excluir-conta').submit(); } return false;"> Excluir Conta </a> </div>
 
     </main>
 

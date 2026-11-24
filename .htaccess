@@ -1,0 +1,16 @@
+# Configurações de segurança do site SAE
+
+# Não mostra a lista de arquivos das pastas
+Options -Indexes
+
+# Bloqueia acesso a arquivos do git e arquivos ocultos (.git, .htaccess, .gitignore...)
+RedirectMatch 404 /\.(git|htaccess|gitignore)
+
+<IfModule mod_headers.c>
+    # Impede que o site seja aberto dentro de um <iframe> de outro site (clickjacking)
+    Header always set X-Frame-Options "SAMEORIGIN"
+    # Impede o navegador de "adivinhar" o tipo de arquivo
+    Header always set X-Content-Type-Options "nosniff"
+    # Não envia o endereço completo da página para outros sites
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

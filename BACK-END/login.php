@@ -1,73 +1,56 @@
 <?php
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-
-    session_start();
-
+    require_once "seguranca.php";
     include("conexao.php");
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-        $email = mysqli_real_escape_string($conn, $_POST['email']);
-        $senha = $_POST['senha'];
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $email = trim($_POST['email'] ?? '');
+        $senha = $_POST['senha'] ?? '';
 
         if (empty($email) || empty($senha)) {
-
-            $resposta = [
+            echo json_encode([
                 "success" => false,
                 "message" => "Por favor, preencha todos os campos."
-            ];
-
-            echo json_encode($resposta);
+            ]);
             exit();
         }
 
-        $sql = "SELECT * FROM usuarios WHERE email = '$email'";
-        $resultado = mysqli_query($conn, $sql);
+        $resultado = executar($conn, "SELECT usuario_id, nome, senha_hash FROM usuarios WHERE email = ?", "s", [$email]);
 
         if (!$resultado) {
-            die("Erro na consulta: " . mysqli_error($conn));
-        }
-
-        if (mysqli_num_rows($resultado) == 1) {
-
-            $usuario = mysqli_fetch_assoc($resultado);
-
-            if (password_verify($senha, $usuario['senha_hash'])) {
-
-                $_SESSION['usuario_id'] = $usuario['usuario_id'];
-                $_SESSION['usuario_nome'] = $usuario['nome'];
-
-                $resposta = [
-                    "success" => true,
-                    "message" => "Login realizado com sucesso!"
-                ];
-
-                echo json_encode($resposta);
-                exit();
-
-            } else {
-
-                $resposta = [
-                    "success" => false,
-                    "message" => "Senha incorreta"
-                ];
-
-                echo json_encode($resposta);
-                exit();
-            }
-
-        } else {
-
-            $resposta = [
+            echo json_encode([
                 "success" => false,
-                "message" => "E-mail não encontrado"
-            ];
-
-            echo json_encode($resposta);
+                "message" => "Erro no servidor. Tente novamente mais tarde."
+            ]);
             exit();
         }
+
+        $usuario = mysqli_fetch_assoc($resultado);
+
+        // Mesma mensagem para e-mail inexistente e senha errada,
+        // assim ninguém descobre quais e-mails estão cadastrados
+        if ($usuario && password_verify($senha, $usuario['senha_hash'])) {
+
+            // Gera um novo ID de sessão (evita sequestro de sessão)
+            session_regenerate_id(true);
+
+            $_SESSION['usuario_id'] = $usuario['usuario_id'];
+            $_SESSION['usuario_nome'] = $usuario['nome'];
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Login realizado com sucesso!"
+            ]);
+            exit();
+        }
+
+        echo json_encode([
+            "success" => false,
+            "message" => "E-mail ou senha inválidos."
+        ]);
+        exit();
 
     } else {
 
