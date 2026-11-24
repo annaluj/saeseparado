@@ -38,6 +38,65 @@ function exigir_login($resposta_json = false) {
     exit();
 }
 
+// ---------- Tipos de conta (estudante, profissional, admin) ----------
+
+// Página para onde cada tipo de conta vai depois do login
+function pagina_inicial($tipo) {
+    if ($tipo === 'admin') {
+        return 'area-admin.php';
+    }
+    if ($tipo === 'profissional') {
+        return 'area-profissional.php';
+    }
+    return 'pagina-principal.php';
+}
+
+// Só deixa continuar quem é de um dos tipos informados. Ex.: exigir_tipo($conn, 'admin');
+// Confere no banco (e não só na sessão), então uma conta desativada ou que mudou
+// de tipo perde o acesso na hora. Retorna o tipo do usuário.
+function exigir_tipo($conn, ...$tipos_permitidos) {
+    exigir_login();
+
+    $resultado = executar($conn, "SELECT tipo, ativo FROM usuarios WHERE usuario_id = ?", "i", [$_SESSION['usuario_id']]);
+    $usuario = $resultado ? mysqli_fetch_assoc($resultado) : null;
+
+    // Conta apagada ou desativada: encerra a sessão
+    if (!$usuario || !$usuario['ativo']) {
+        session_unset();
+        session_destroy();
+        header("Location: ../FRONT-END/login.html");
+        exit();
+    }
+
+    $_SESSION['usuario_tipo'] = $usuario['tipo'];
+
+    if (!in_array($usuario['tipo'], $tipos_permitidos, true)) {
+        header("Location: " . pagina_inicial($usuario['tipo']));
+        exit();
+    }
+
+    return $usuario['tipo'];
+}
+
+// ---------- Avisos para mostrar na próxima página ----------
+// Ex.: definir_aviso("Consulta confirmada!"); header("Location: area-profissional.php");
+
+function definir_aviso($mensagem, $erro = false) {
+    $_SESSION['aviso'] = ['mensagem' => $mensagem, 'erro' => $erro];
+}
+
+// Mostra o aviso guardado (se houver) e apaga para não repetir
+function mostrar_aviso() {
+    if (empty($_SESSION['aviso'])) {
+        return;
+    }
+    $aviso = $_SESSION['aviso'];
+    unset($_SESSION['aviso']);
+
+    $classe = $aviso['erro'] ? 'aviso aviso-erro' : 'aviso';
+    echo '<p class="' . $classe . '">' . htmlspecialchars($aviso['mensagem']) . '</p>';
+}
+
 // ---------- Proteção CSRF ----------
 
 function csrf_token() {

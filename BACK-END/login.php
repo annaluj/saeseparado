@@ -29,7 +29,7 @@
 
     require_once "conexao.php";
 
-    $resultado = executar($conn, "SELECT usuario_id, nome, senha_hash FROM usuarios WHERE email = ?", "s", [$email]);
+    $resultado = executar($conn, "SELECT usuario_id, nome, senha_hash, tipo, ativo FROM usuarios WHERE email = ?", "s", [$email]);
 
     if (!$resultado) {
         echo json_encode([
@@ -49,16 +49,28 @@
     // Mesma mensagem para e-mail inexistente e senha errada
     if ($usuario && $senha_correta) {
 
+        limpar_tentativas_login($email);
+
+        if (!$usuario['ativo']) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Esta conta está desativada. Procure a equipe do SAE."
+            ]);
+            exit();
+        }
+
         // Gera um novo ID de sessão (evita sequestro de sessão)
         session_regenerate_id(true);
-        limpar_tentativas_login($email);
 
         $_SESSION['usuario_id'] = $usuario['usuario_id'];
         $_SESSION['usuario_nome'] = $usuario['nome'];
+        $_SESSION['usuario_tipo'] = $usuario['tipo'];
 
         echo json_encode([
             "success" => true,
-            "message" => "Login realizado com sucesso!"
+            "message" => "Login realizado com sucesso!",
+            // Cada tipo de conta vai para a sua área
+            "redirect" => "../BACK-END/" . pagina_inicial($usuario['tipo'])
         ]);
         exit();
     }

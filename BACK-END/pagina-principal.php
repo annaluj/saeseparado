@@ -1,22 +1,18 @@
 <?php
 require_once "seguranca.php";
-exigir_login();
-
 require_once "conexao.php";
 require_once "usuarios.php";
+require_once "agendamentos.php";
+
+// Profissionais e administradores são levados para a área deles
+exigir_tipo($conn, 'estudante');
 
 $usuario_id = $_SESSION['usuario_id'];
 
-// 1. Busca os agendamentos do usuário logado
-$resultado_agendamentos = executar($conn,
-    "SELECT id, data_consulta, horario_consulta FROM agendamentos
-      WHERE usuario_id = ?
-      ORDER BY data_consulta ASC, horario_consulta ASC",
+// 1. Próximos agendamentos do estudante (os cancelados por ele não aparecem)
+$agendamentos = buscar_agendamentos($conn,
+    "a.usuario_id = ? AND a.status IN ('pendente', 'confirmado', 'recusado') AND a.data_consulta >= CURDATE()",
     "i", [$usuario_id]);
-
-if (!$resultado_agendamentos) {
-    die("Erro ao buscar agendamentos. Tente novamente mais tarde.");
-}
 
 // 2. Média das emoções do usuário
 $emocoes = resumo_emocoes($conn, $usuario_id);
@@ -25,8 +21,9 @@ if (!$emocoes) {
     die("Erro ao buscar registros emocionais. Tente novamente mais tarde.");
 }
 
-// 3. Foto de perfil do usuário
+// 3. Dados do cabeçalho
 $foto = foto_do_usuario($conn, $usuario_id);
+$subtitulo = "Seja bem-vindo(a) ao SAE (Serviço de Apoio Estudantil).";
 ?>
 
 <!DOCTYPE html>
@@ -37,6 +34,7 @@ $foto = foto_do_usuario($conn, $usuario_id);
     <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
     <title>Página Principal</title>
     <link rel="stylesheet" href="../FRONT-END/pagina-principal.css">
+    <link rel="stylesheet" href="../FRONT-END/areas.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Federo&display=swap" rel="stylesheet">
@@ -45,35 +43,7 @@ $foto = foto_do_usuario($conn, $usuario_id);
 
 <div class="fundo">
 
-    <header class="inicio">
-        <div class="boas-vindas">
-            <h1>
-                Olá, <?php echo htmlspecialchars($_SESSION['usuario_nome']); ?>!
-            </h1>
-            <p>Seja bem-vindo(a) ao SAE (Serviço de Apoio Estudantil).</p>
-        </div>
-
-
-        <div class="foto-perfil">
-            <form action="alterar_foto.php" method="POST" enctype="multipart/form-data">
-                <?php echo csrf_campo(); ?>
-                <label for="nova-foto" class="foto-clicavel" title="Clique para alterar sua foto">
-                    <?php if (!empty($foto)): ?>
-                        <img src="<?php echo htmlspecialchars($foto); ?>" alt="Foto do usuário">
-                    <?php else: ?>
-                        <div class="sem-foto">👤</div>
-                    <?php endif; ?>
-                </label>
-
-                <input type="file" id="nova-foto" name="nova_foto" accept="image/*">
-            </form>
-
-            <form action="logout.php" method="POST">
-                <?php echo csrf_campo(); ?>
-                <button type="submit" class="sair">Sair da conta</button>
-            </form>
-        </div>
-    </header>
+    <?php include "cabecalho.php"; ?>
 
     <main class="cards">
 
@@ -87,31 +57,33 @@ $foto = foto_do_usuario($conn, $usuario_id);
         <div class="card">
             <h2>Meus agendamentos</h2>
 
-            <?php if (mysqli_num_rows($resultado_agendamentos) > 0): ?>
+            <?php if ($agendamentos): ?>
                 <ul class="lista-agendamentos">
-                    <?php while ($agendamento = mysqli_fetch_assoc($resultado_agendamentos)): ?>
-                        <?php
-                            $data_formatada = date('d/m/Y', strtotime($agendamento['data_consulta']));
-                            $hora_formatada = date('H:i', strtotime($agendamento['horario_consulta']));
-                        ?>
+                    <?php foreach ($agendamentos as $agendamento): ?>
                         <li class="agendamento">
 
-                            📅 <strong>Data:</strong> <?php echo $data_formatada; ?><br>
+                            📅 <strong>Data:</strong> <?php echo formatar_data($agendamento['data_consulta']); ?><br>
 
-                            ⏰ <strong>Horário:</strong> <?php echo $hora_formatada; ?><br>
+                            ⏰ <strong>Horário:</strong> <?php echo formatar_hora($agendamento['horario_consulta']); ?><br>
 
-                            📌 <strong>Status:</strong> Aguardando confirmação
+                            📌 <strong>Status:</strong> <?php echo etiqueta_status($agendamento['status']); ?>
 
-                            <form action="excluir_agendamento.php" method="POST" class="form-excluir-agendamento"
-                                  data-confirmar="Tem certeza que deseja excluir este agendamento?">
-                                <?php echo csrf_campo(); ?>
-                                <input type="hidden" name="agendamento_id" value="<?php echo (int)$agendamento['id']; ?>">
+                            <?php if ($agendamento['status'] === 'confirmado' && $agendamento['profissional_nome']): ?>
+                                <br>🧑‍⚕️ <strong>Profissional:</strong> <?php echo htmlspecialchars($agendamento['profissional_nome']); ?>
+                            <?php endif; ?>
 
-                                <button type="submit" class="btn-excluir-agendamento">🗑️ Excluir agendamento</button>
-                            </form>
+                            <?php if (in_array($agendamento['status'], ['pendente', 'confirmado'], true)): ?>
+                                <form action="cancelar_agendamento.php" method="POST" class="form-excluir-agendamento"
+                                      data-confirmar="Tem certeza que deseja cancelar este agendamento?">
+                                    <?php echo csrf_campo(); ?>
+                                    <input type="hidden" name="agendamento_id" value="<?php echo (int)$agendamento['id']; ?>">
+
+                                    <button type="submit" class="btn-perigo">🗑️ Cancelar agendamento</button>
+                                </form>
+                            <?php endif; ?>
 
                         </li>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </ul>
             <?php else: ?>
                 <p>Você ainda não possui agendamentos marcados.</p>

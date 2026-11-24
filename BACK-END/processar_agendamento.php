@@ -32,6 +32,7 @@ if ($data_hora < new DateTime()) {
 }
 
 require_once "conexao.php";
+exigir_tipo($conn, 'estudante'); // só estudantes agendam e registram emoções
 
 $sql = "INSERT INTO agendamentos (usuario_id, data_consulta, horario_consulta) VALUES (?, ?, ?)";
 

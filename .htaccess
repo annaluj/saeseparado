@@ -7,7 +7,7 @@ Options -Indexes
 RedirectMatch 404 /\.(git|htaccess|gitignore)
 
 # Bloqueia acesso direto aos arquivos de configuração e de funções do PHP
-<FilesMatch "^(config|config\.exemplo|conexao|seguranca|usuarios)\.php$">
+<FilesMatch "^(config|config\.exemplo|conexao|seguranca|usuarios|agendamentos|cabecalho)\.php$">
     Require all denied
 </FilesMatch>
 

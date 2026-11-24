@@ -44,6 +44,17 @@
         }
 
         $resultado = mysqli_stmt_get_result($stmt);
-        return $resultado !== false ? $resultado : true;
+        if ($resultado !== false) {
+            return $resultado;
+        }
+
+        // Guarda quantas linhas o UPDATE/DELETE alterou (veja linhas_alteradas())
+        $GLOBALS['sae_linhas_alteradas'] = mysqli_stmt_affected_rows($stmt);
+        return true;
+    }
+
+    // Quantas linhas o último INSERT/UPDATE/DELETE feito com executar() alterou
+    function linhas_alteradas() {
+        return $GLOBALS['sae_linhas_alteradas'] ?? 0;
     }
 ?>
