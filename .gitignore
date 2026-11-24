@@ -1,0 +1,7 @@
+# Fotos enviadas pelos usuários (dados pessoais, não vão para o GitHub)
+/uploads/
+BACK-END/uploads/*
+!BACK-END/uploads/.htaccess
+
+# Credenciais do banco (cada pessoa tem o seu; use config.exemplo.php como modelo)
+BACK-END/config.php

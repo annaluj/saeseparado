@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAE - Serviço de Apoio ao Estudante</title>
 
+    <link rel="stylesheet" href="base.css">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Federo&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Neuton:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="imagens/favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Federo&family=Neuton:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -19,14 +19,16 @@
 
      
      <div class="intro">
-        <img src="menu.png"  alt="" class="menu" id="menu">
+        <button type="button" class="botao-menu" id="menu" aria-label="Abrir menu">
+            <img src="imagens/menu.png" alt="" class="menu">
+        </button>
         <h2>SAE</h2>
     </div>
 
     <div class="sidebar" id="sidebar">
 
-    <button class="fechar" id="fechar">
-        <img src="fechar.png" alt="">
+    <button type="button" class="fechar" id="fechar" aria-label="Fechar menu">
+        <img src="imagens/fechar.png" alt="">
     </button>
 
     <a href="login.html">Entrar</a>
@@ -35,7 +37,6 @@
 </div>
 </header>
 
-<section>
     <main class="conteudo">
 
         <div class="inicio">
@@ -78,7 +79,7 @@
            
             <div class="passo">
                 <h2 class="numero">1</h2>
-                <p>Cadastra-se</p>
+                <p>Cadastre-se</p>
             </div>
 
             <div class="passo">
@@ -113,11 +114,10 @@
             </div>
         </div>
     </main>
-</section>
 
 <footer>
     <p>SAE • Serviço de Apoio ao Estudante</p>
-<p>Desenvolvido por Ana Julia,Ana Luiza e Bianca.</p>
+<p>Desenvolvido por Ana Julia, Ana Luiza e Bianca.</p>
 </footer>
 
 <script src="pagina01.js"></script>

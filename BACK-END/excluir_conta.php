@@ -1,21 +1,26 @@
 <?php
 
-session_start();
+require_once "seguranca.php";
+exigir_login();
 
-include("conexao.php");
-
-// Verifica se o usuário está logado
-if (!isset($_SESSION['usuario_id'])) {
-    header("Location: ../FRONT-END/login.html");
+// Só aceita exclusão enviada pelo formulário do perfil (POST + token)
+if ($_SERVER["REQUEST_METHOD"] !== "POST" || !csrf_valido()) {
+    header("Location: perfil.php");
     exit();
 }
 
+require_once "conexao.php";
+require_once "usuarios.php";
+
 $usuario_id = $_SESSION['usuario_id'];
 
-// Exclui o usuário do banco
-$sql = "DELETE FROM usuarios WHERE usuario_id = '$usuario_id'";
+// Guarda a foto para apagar depois
+$foto = foto_do_usuario($conn, $usuario_id);
 
-if (mysqli_query($conn, $sql)) {
+// Exclui o usuário do banco (agendamentos e emoções são apagados junto pelo ON DELETE CASCADE)
+if (executar($conn, "DELETE FROM usuarios WHERE usuario_id = ?", "i", [$usuario_id])) {
+
+    apagar_foto($foto);
 
     // Apaga as informações da sessão
     session_unset();
@@ -24,10 +29,8 @@ if (mysqli_query($conn, $sql)) {
     // Volta para a página inicial
     header("Location: ../FRONT-END/index.html");
     exit();
-
-} else {
-
-    echo "Erro ao excluir a conta: " . mysqli_error($conn);
 }
+
+echo "Erro ao excluir a conta. Tente novamente mais tarde.";
 
 ?>

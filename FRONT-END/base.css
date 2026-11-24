@@ -1,0 +1,6 @@
+/* Reset básico usado em várias páginas (antes estava copiado em cada CSS) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}

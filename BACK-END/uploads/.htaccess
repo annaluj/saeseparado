@@ -1,0 +1,15 @@
+# Pasta de fotos enviadas pelos usuários
+
+# Não mostra a lista de arquivos da pasta
+Options -Indexes
+
+# Nunca executa scripts aqui dentro, mesmo que alguém consiga enviar um
+<FilesMatch "\.(php\d?|phtml|phar|pl|py|cgi|sh)$">
+    Require all denied
+</FilesMatch>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
