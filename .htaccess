@@ -22,6 +22,7 @@ RedirectMatch 404 /\.(git|htaccess|gitignore)
     Header always unset X-Powered-By
     Header unset X-Powered-By
     # Só permite scripts, estilos e imagens do próprio site (e as fontes do Google).
+    # connect-src libera o ViaCEP, usado para preencher o endereço pelo CEP (cep.js).
     # Se um dia precisar de script ou estilo de outro site, adicione o endereço aqui.
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://viacep.com.br; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
 </IfModule>

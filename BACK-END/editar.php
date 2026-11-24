@@ -42,8 +42,8 @@ function valor($campo) {
 
         <h2>Endereço</h2>
 
+        <input type="text" name="cep" placeholder="CEP" maxlength="9" inputmode="numeric" autocomplete="postal-code" required value="<?php valor('cep'); ?>">
         <input type="text" name="rua" placeholder="Rua" maxlength="150" required value="<?php valor('rua'); ?>">
-        <input type="text" name="cep" placeholder="CEP" maxlength="10" required value="<?php valor('cep'); ?>">
         <input type="text" name="numero_casa" placeholder="Número" maxlength="10" required value="<?php valor('numero_casa'); ?>">
         <input type="text" name="bairro" placeholder="Bairro" maxlength="100" required value="<?php valor('bairro'); ?>">
         <input type="text" name="cidade" placeholder="Cidade" maxlength="100" required value="<?php valor('cidade'); ?>">
@@ -53,5 +53,6 @@ function valor($campo) {
     </form>
 
     <script src="../FRONT-END/comum.js"></script>
+    <script src="../FRONT-END/cep.js"></script>
 </body>
 </html>
