@@ -3,7 +3,7 @@
 // Inclua com: require_once "seguranca.php";  (no lugar de session_start())
 
 // Não mostra erros internos para o usuário; eles vão para o log do PHP
-// (C:\xampp\php\logs\php_error_log). Para depurar, troque '0' por '1' temporariamente.
+// (no XAMPP: C:\xampp\apache\logs\error.log). Para depurar, troque '0' por '1' temporariamente.
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
@@ -18,6 +18,24 @@ if (session_status() === PHP_SESSION_NONE) {
         'secure'   => !empty($_SERVER['HTTPS']),
     ]);
     session_start();
+}
+
+// ---------- Login obrigatório ----------
+
+// Coloque no começo das páginas que só podem ser vistas por quem está logado.
+// Use exigir_login(true) nos arquivos que respondem JSON para o JavaScript.
+function exigir_login($resposta_json = false) {
+    if (isset($_SESSION['usuario_id'])) {
+        return;
+    }
+
+    if ($resposta_json) {
+        header("Content-Type: application/json; charset=UTF-8");
+        echo json_encode(["success" => false, "message" => "Sessão expirada. Faça login novamente."]);
+    } else {
+        header("Location: ../FRONT-END/login.html");
+    }
+    exit();
 }
 
 // ---------- Proteção CSRF ----------
@@ -42,47 +60,78 @@ function csrf_valido() {
 }
 
 // ---------- Limite de tentativas de login ----------
-// Depois de 5 erros seguidos com o mesmo e-mail e IP, bloqueia por 15 minutos.
-// As tentativas ficam guardadas em arquivos na pasta temporária do sistema.
+// Bloqueia por 15 minutos depois de:
+//  - 5 erros com o mesmo e-mail vindo do mesmo IP, ou
+//  - 15 erros com o mesmo e-mail vindo de IPs diferentes.
+// As tentativas ficam em arquivos na pasta temporária do sistema.
 
-const LOGIN_MAX_TENTATIVAS = 5;
 const LOGIN_BLOQUEIO_SEGUNDOS = 15 * 60;
 
-function arquivo_tentativas($email) {
+function contadores_login($email) {
+    $email = strtolower($email);
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    return [
+        hash('sha256', 'email-ip|' . $email . '|' . $ip) => 5,
+        hash('sha256', 'email|' . $email) => 15,
+    ];
+}
+
+// Abre o arquivo do contador com trava, para que requisições ao mesmo tempo
+// não consigam furar o limite. Retorna [arquivo aberto, dados].
+function abrir_contador($chave) {
     $pasta = sys_get_temp_dir() . '/sae_login';
     if (!is_dir($pasta)) {
         mkdir($pasta, 0700, true);
     }
-    $chave = hash('sha256', strtolower($email) . '|' . ($_SERVER['REMOTE_ADDR'] ?? ''));
-    return $pasta . '/' . $chave . '.json';
-}
 
-function ler_tentativas($email) {
-    $arquivo = arquivo_tentativas($email);
-    $dados = is_file($arquivo) ? json_decode(file_get_contents($arquivo), true) : null;
+    $arquivo = fopen($pasta . '/' . $chave . '.json', 'c+');
+    flock($arquivo, LOCK_EX);
+
+    $dados = json_decode(stream_get_contents($arquivo), true);
 
     // Passou o tempo de bloqueio: zera a contagem
     if (!$dados || time() - $dados['ultima'] > LOGIN_BLOQUEIO_SEGUNDOS) {
-        return ['quantidade' => 0, 'ultima' => 0];
+        $dados = ['quantidade' => 0, 'ultima' => 0];
     }
-    return $dados;
+    return [$arquivo, $dados];
+}
+
+function fechar_contador($arquivo, $dados = null) {
+    if ($dados !== null) {
+        ftruncate($arquivo, 0);
+        rewind($arquivo);
+        fwrite($arquivo, json_encode($dados));
+    }
+    flock($arquivo, LOCK_UN);
+    fclose($arquivo);
 }
 
 function login_bloqueado($email) {
-    return ler_tentativas($email)['quantidade'] >= LOGIN_MAX_TENTATIVAS;
+    foreach (contadores_login($email) as $chave => $limite) {
+        [$arquivo, $dados] = abrir_contador($chave);
+        fechar_contador($arquivo);
+        if ($dados['quantidade'] >= $limite) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function registrar_falha_login($email) {
-    $dados = ler_tentativas($email);
-    $dados['quantidade']++;
-    $dados['ultima'] = time();
-    file_put_contents(arquivo_tentativas($email), json_encode($dados), LOCK_EX);
+    foreach (array_keys(contadores_login($email)) as $chave) {
+        [$arquivo, $dados] = abrir_contador($chave);
+        $dados['quantidade']++;
+        $dados['ultima'] = time();
+        fechar_contador($arquivo, $dados);
+    }
 }
 
 function limpar_tentativas_login($email) {
-    $arquivo = arquivo_tentativas($email);
-    if (is_file($arquivo)) {
-        unlink($arquivo);
+    foreach (array_keys(contadores_login($email)) as $chave) {
+        $caminho = sys_get_temp_dir() . '/sae_login/' . $chave . '.json';
+        if (is_file($caminho)) {
+            unlink($caminho);
+        }
     }
 }
 

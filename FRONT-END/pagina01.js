@@ -5,11 +5,9 @@ const emojis = document.querySelectorAll(".emoji");
 const mensagem = document.getElementById("mensagem");
 const inputFoto = document.getElementById('input-foto');
 const imgPreview = document.getElementById('imagem-preview');
+const novaFoto = document.getElementById('nova-foto');
 
-// Token de segurança (CSRF) que o PHP coloca no <head> da página principal
-const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-const csrfToken = csrfMeta ? csrfMeta.content : "";
-
+// Cadastro: mostra a prévia da foto escolhida
 if (inputFoto && imgPreview) {
     inputFoto.addEventListener('change', function(event) {
         const arquivo = event.target.files[0];
@@ -26,30 +24,49 @@ if (inputFoto && imgPreview) {
         }
     });
 }
-if(menu && sidebar){
-    menu.addEventListener("click", function(){
+
+// Página principal: envia a nova foto assim que ela é escolhida
+if (novaFoto) {
+    novaFoto.addEventListener('change', function() {
+        novaFoto.form.submit();
+    });
+}
+
+// Index: abre e fecha o menu lateral
+if (menu && sidebar) {
+    menu.addEventListener("click", function() {
         sidebar.classList.toggle("abrir");
     });
 }
 
-if(fechar && sidebar){
-    fechar.addEventListener("click",function(){
+if (fechar && sidebar) {
+    fechar.addEventListener("click", function() {
         sidebar.classList.remove("abrir");
     });
 }
+
+// Página principal: atualiza a média, o estado e o total sem recarregar
+function atualizarResumoEmocoes(resumo) {
+    if (!resumo) {
+        return;
+    }
+    document.getElementById("media-emocoes").textContent = resumo.media;
+    document.getElementById("status-emocoes").textContent = resumo.status;
+    document.getElementById("total-emocoes").textContent = resumo.quantidade;
+}
+
+// Página principal: registra a emoção clicada
 if (emojis.length > 0 && mensagem) {
     emojis.forEach((emoji) => {
         emoji.addEventListener("click", (event) => {
             event.preventDefault();
 
-            const valorEmocao = emoji.getAttribute('data-valor');
+            const valorEmocao = emoji.dataset.valor;
 
-            if (!valorEmocao) {
-                console.error("Atributo data-valor não encontrado no botão do emoji!");
-                return;
-            }
-
-            emojis.forEach(e => e.classList.remove("ativo"));
+            emojis.forEach(e => {
+                e.classList.remove("ativo");
+                e.disabled = true; // evita cliques repetidos enquanto salva
+            });
             emoji.classList.add("ativo");
 
             mensagem.textContent = "Salvando...";
@@ -60,7 +77,7 @@ if (emojis.length > 0 && mensagem) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json; charset=UTF-8',
-                    'X-CSRF-Token': csrfToken
+                    'X-CSRF-Token': csrfToken()
                 },
                 body: JSON.stringify({ emocao: valorEmocao })
             })
@@ -69,6 +86,7 @@ if (emojis.length > 0 && mensagem) {
                 if (data.success) {
                     mensagem.textContent = "✅ " + data.message;
                     mensagem.style.color = "green";
+                    atualizarResumoEmocoes(data.resumo);
                 } else {
                     mensagem.textContent = "❌ " + data.message;
                     mensagem.style.color = "red";
@@ -80,6 +98,7 @@ if (emojis.length > 0 && mensagem) {
                 mensagem.style.color = "red";
             })
             .finally(() => {
+                emojis.forEach(e => e.disabled = false);
                 setTimeout(() => {
                     mensagem.classList.remove("mostrar");
                     mensagem.textContent = "";

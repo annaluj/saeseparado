@@ -1,9 +1,3 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
     display: flex;
     justify-content: center;
@@ -59,10 +53,6 @@ a{
     text-decoration: none;
 }
 
-.link-voltar {
-    text-decoration: none;
-}
-
 .btn-voltar {
     background-color: transparent;
     color: #555;
@@ -72,4 +62,8 @@ a{
 .btn-voltar:hover {
     background-color: #eee;
     color: #000;
+}
+
+#imagem-preview {
+    display: none; /* aparece quando a pessoa escolhe uma foto */
 }

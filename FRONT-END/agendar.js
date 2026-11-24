@@ -1,9 +1,5 @@
-const formConsulta = document.getElementById("formConsulta");
 // A data mínima do calendário já vem definida pelo PHP (agendar.php), no horário do Brasil.
-
-// Token de segurança (CSRF) que o PHP coloca no <head> da página
-const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-const csrfToken = csrfMeta ? csrfMeta.content : "";
+const formConsulta = document.getElementById("formConsulta");
 
 if (formConsulta) {
     formConsulta.addEventListener("submit", function(event){
@@ -22,17 +18,17 @@ if (formConsulta) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRF-Token": csrfToken
+                "X-CSRF-Token": csrfToken()
             },
             body: JSON.stringify(dados)
         })
         .then(resposta => resposta.json())
         .then(resultado => {
-            if (resultado.status === "sucesso") {
-                alert("✅ " + resultado.mensagem + "\n\nAtenção: nossa equipe irá conferir se esse horário está disponível.");
+            if (resultado.success) {
+                alert("✅ " + resultado.message + "\n\nAtenção: nossa equipe irá conferir se esse horário está disponível.");
                 window.location.href = "../BACK-END/pagina-principal.php";
             } else {
-                alert("⚠️ " + resultado.mensagem);
+                alert("⚠️ " + resultado.message);
 
                 btnSubmit.disabled = false;
                 btnSubmit.textContent = "Agendar Consulta";
@@ -41,7 +37,7 @@ if (formConsulta) {
         .catch(erro => {
             console.error("Erro no envio:", erro);
             alert("❌ Erro ao enviar o agendamento. Verifique sua conexão.");
-         
+
             btnSubmit.disabled = false;
             btnSubmit.textContent = "Agendar Consulta";
         });
